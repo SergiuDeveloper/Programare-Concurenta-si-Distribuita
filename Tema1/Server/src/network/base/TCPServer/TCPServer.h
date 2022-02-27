@@ -1,6 +1,8 @@
 #ifndef TCP_SERVER
 #define TCP_SERVER
 
+#define TCP_MAX_BUFFER_SIZE 65535
+
 #include <iostream>
 #include <thread>
 #include <mutex>

@@ -1,12 +1,10 @@
 #ifndef TCP_UPLOAD_TRANSMISSION
 #define TCP_UPLOAD_TRANSMISSION
 
-#define TCP_MAX_BUFFER_SIZE 65535
-
 #include "../../../base/TCPServer/TCPServer.h"
 
 
-class TCPUploadTransmission : private TCPServer {
+class TCPUploadTransmission : public TCPServer {
 private:
     int chunkSize;
     bool acknowledge;

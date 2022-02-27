@@ -1,15 +1,13 @@
 #ifndef UDP_UPLOAD_TRANSMISSION
 #define UDP_UPLOAD_TRANSMISSION
 
-#define UDP_MAX_BUFFER_SIZE 65535
-
 #include <iostream>
 #include <unordered_map>
 
 #include "../../../base/UDPServer/UDPServer.h"
 
 
-class UDPUploadTransmission : private UDPServer {
+class UDPUploadTransmission : public UDPServer {
 private:
     int chunkSize;
     bool acknowledge;

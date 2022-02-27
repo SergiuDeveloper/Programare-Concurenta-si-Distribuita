@@ -1,6 +1,8 @@
 #ifndef UDP_SERVER
 #define UDP_SERVER
 
+#define UDP_MAX_BUFFER_SIZE 65535
+
 #include <iostream>
 #include <thread>
 #include <mutex>

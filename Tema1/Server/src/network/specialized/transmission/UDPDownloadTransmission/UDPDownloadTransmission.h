@@ -1,8 +1,6 @@
 #ifndef UDP_DOWNLOAD_TRANSMISSION
 #define UDP_DOWNLOAD_TRANSMISSION
 
-#define UDP_MAX_BUFFER_SIZE 65535
-
 #include <iostream>
 #include <unordered_map>
 #include <fstream>
@@ -12,7 +10,7 @@
 #include "../../../base/UDPServer/UDPServer.h"
 
 
-class UDPDownloadTransmission : private UDPServer {
+class UDPDownloadTransmission : public UDPServer {
 private:
     std::vector<std::vector<unsigned char>> benchmarkChunks;
     std::mutex * benchmarkChunksMutex;

@@ -58,6 +58,7 @@ void UDPDownloadTransmission::provideBenchmarkChunk(struct sockaddr_in clientSoc
     sendto(getSockDesc(), benchmarkChunkArr, benchmarkChunk.size(), 0, (struct sockaddr *)&clientSockAddr, sizeof(clientSockAddr));
 
     if (chunkCounter[clientIP] == benchmarkChunks.size() - 1) {
+        chunkCounter.erase(clientIP);
         return;
     }
     setChunkCounterValue(clientIP, chunkCounter[clientIP] + 1);

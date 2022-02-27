@@ -1,8 +1,6 @@
 #ifndef TCP_DOWNLOAD_TRANSMISSION
 #define TCP_DOWNLOAD_TRANSMISSION
 
-#define TCP_MAX_BUFFER_SIZE 65535
-
 #include <iostream>
 #include <fstream>
 #include <iterator>
@@ -11,7 +9,7 @@
 #include "../../../base/TCPServer/TCPServer.h"
 
 
-class TCPDownloadTransmission : private TCPServer {
+class TCPDownloadTransmission : public TCPServer {
 private:
     std::vector<std::vector<unsigned char>> benchmarkChunks;
     int chunkSize;

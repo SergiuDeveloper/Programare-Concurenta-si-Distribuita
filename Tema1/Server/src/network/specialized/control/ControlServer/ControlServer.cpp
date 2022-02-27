@@ -1,15 +1,15 @@
 #include "ControlServer.h"
 
 
-ControlServer::ControlServer(int port, int tcpDownloadServerPort, int tcpUploadServerPort, int udpDownloadServerPort, int udpUploadServerPort, int tcpDownloadStreamServerPort, int tcpUploadStreamServerPort, int udpDownloadStreamServerPort, int udpUploadStreamServerPort, std::string benchmarkFilePath, int chunkSize) : TCPServer(port) {
-    this->tcpDownloadServer = new TCPDownloadTransmission(tcpDownloadServerPort, benchmarkFilePath, chunkSize, true);
-    this->tcpDownloadStreamServer = new TCPDownloadTransmission(tcpDownloadServerPort, benchmarkFilePath, chunkSize, false);
-    this->tcpUploadServer = new TCPUploadTransmission(tcpDownloadServerPort, chunkSize, true);
-    this->tcpUploadStreamServer = new TCPUploadTransmission(tcpDownloadServerPort, chunkSize, false);
-    this->udpDownloadServer = new UDPDownloadTransmission(tcpDownloadServerPort, benchmarkFilePath, chunkSize, true);
-    this->udpDownloadStreamServer = new UDPDownloadTransmission(tcpDownloadServerPort, benchmarkFilePath, chunkSize, false);
-    this->udpUploadServer = new UDPUploadTransmission(tcpDownloadServerPort, chunkSize, true);
-    this->udpUploadStreamServer = new UDPUploadTransmission(tcpDownloadServerPort, chunkSize, false);
+ControlServer::ControlServer(int port, int tcpDownloadServerPort, int tcpUploadServerPort, int udpDownloadServerPort, int udpUploadServerPort, int tcpDownloadStreamServerPort, int tcpUploadStreamServerPort, int udpDownloadStreamServerPort, int udpUploadStreamServerPort, std::string benchmarkFilePath, int chunkSize) : TCPServer(port), TimestampsHandler() {
+    this->tcpDownloadServer = new TCPDownloadTransmission(this, tcpDownloadServerPort, benchmarkFilePath, chunkSize, true);
+    this->tcpDownloadStreamServer = new TCPDownloadTransmission(this, tcpDownloadServerPort, benchmarkFilePath, chunkSize, false);
+    this->tcpUploadServer = new TCPUploadTransmission(this, tcpDownloadServerPort, chunkSize, true);
+    this->tcpUploadStreamServer = new TCPUploadTransmission(this, tcpDownloadServerPort, chunkSize, false);
+    this->udpDownloadServer = new UDPDownloadTransmission(this, tcpDownloadServerPort, benchmarkFilePath, chunkSize, true);
+    this->udpDownloadStreamServer = new UDPDownloadTransmission(this, tcpDownloadServerPort, benchmarkFilePath, chunkSize, false);
+    this->udpUploadServer = new UDPUploadTransmission(this, tcpDownloadServerPort, chunkSize, true);
+    this->udpUploadStreamServer = new UDPUploadTransmission(this, tcpDownloadServerPort, chunkSize, false);
     
     this->tcpDownloadServerPort = tcpDownloadServerPort;
     this->tcpUploadServerPort = tcpUploadServerPort;
@@ -19,6 +19,8 @@ ControlServer::ControlServer(int port, int tcpDownloadServerPort, int tcpUploadS
     this->tcpUploadStreamServerPort = tcpUploadStreamServerPort;
     this->udpDownloadStreamServerPort = udpDownloadStreamServerPort;
     this->udpUploadStreamServerPort = udpUploadStreamServerPort;
+    
+    this->activeClientsMutex = new std::mutex();
 }
 
 ControlServer::~ControlServer() {
@@ -30,6 +32,8 @@ ControlServer::~ControlServer() {
     delete this->tcpUploadStreamServer;
     delete this->udpDownloadStreamServer;
     delete this->udpUploadStreamServer;
+
+    delete this->activeClientsMutex;
 }
 
 void ControlServer::run() {
@@ -60,9 +64,32 @@ void ControlServer::stop() {
 
 void ControlServer::handleClient(int clientSockDesc, char * clientIP) {
     if (activeClients.find(clientIP) == activeClients.end()) {
+        std::cerr<<"Client "<<clientIP<<" already connected\r\n";
         return;
     }
 
+    activeClientsMutex->lock();
+    activeClients.insert(clientIP);
+    activeClientsMutex->unlock();
+
+    sendPorts(clientSockDesc, clientIP);
+
+    bool sleepBeforeRespond = false;
+    bool success;
+    for (int i = 0; i < BENCHMARKS_COUNT; i++) {
+        success = satisfyRequest(clientSockDesc, clientIP, sleepBeforeRespond);
+        if (!success) {
+            return;
+        }
+        sleepBeforeRespond = !sleepBeforeRespond;
+    }
+
+    activeClientsMutex->lock();
+    activeClients.erase(clientIP);
+    activeClientsMutex->unlock();
+}
+
+void ControlServer::sendPorts(int clientSockDesc, char * clientIP) {
     send(clientSockDesc, &tcpDownloadServerPort, sizeof(int), 0);
     send(clientSockDesc, &tcpUploadServerPort, sizeof(int), 0);
     send(clientSockDesc, &udpDownloadServerPort, sizeof(int), 0);
@@ -71,6 +98,28 @@ void ControlServer::handleClient(int clientSockDesc, char * clientIP) {
     send(clientSockDesc, &tcpUploadStreamServerPort, sizeof(int), 0);
     send(clientSockDesc, &udpDownloadStreamServerPort, sizeof(int), 0);
     send(clientSockDesc, &udpUploadStreamServerPort, sizeof(int), 0);
+}
 
-    activeClients.erase(clientIP);
+bool ControlServer::satisfyRequest(int clientSockDesc, char * clientIP, bool sleepBeforeRespond) {
+    uint8_t * readBuffer = new uint8_t[1];
+    int readBytes = read(clientSockDesc, readBuffer, 1);
+    if (readBytes <= 0) {
+        std::cerr<<"Failed to read from socket\r\n";
+        activeClientsMutex->lock();
+        activeClients.erase(clientIP);
+        activeClientsMutex->unlock();
+        return false;
+    }
+
+    if (sleepBeforeRespond) {
+        usleep(SLEEP_TIME_BEFORE_UPLOAD_RESPOND);
+    }
+
+    time_t timestamp = getTimestamp(clientIP);
+    int bytesCount = getBytesCount(clientIP);
+
+    send(clientSockDesc, &timestamp, sizeof(time_t), 0);
+    send(clientSockDesc, &bytesCount, sizeof(int), 0);
+
+    return true;
 }

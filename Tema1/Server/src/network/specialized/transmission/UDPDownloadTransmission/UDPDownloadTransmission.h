@@ -8,10 +8,12 @@
 #include <vector>
 
 #include "../../../base/UDPServer/UDPServer.h"
+#include "../../control/TimestampsHandler/TimestampsHandler.h"
 
 
 class UDPDownloadTransmission : public UDPServer {
 private:
+    TimestampsHandler * timestampsHandler;
     std::vector<std::vector<unsigned char>> benchmarkChunks;
     std::mutex * benchmarkChunksMutex;
     int chunkSize;
@@ -20,7 +22,7 @@ private:
     std::mutex * chunkCounterMutex;
 
 public:
-    UDPDownloadTransmission(int port, std::string benchmarkFilePath, int chunkSize, bool acknowledge);
+    UDPDownloadTransmission(TimestampsHandler * timestampsHandler, int port, std::string benchmarkFilePath, int chunkSize, bool acknowledge);
     ~UDPDownloadTransmission();
 
 private:

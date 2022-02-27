@@ -1,11 +1,12 @@
 #include "UDPDownloadTransmission.h"
 
 
-UDPDownloadTransmission::UDPDownloadTransmission(int port, std::string benchmarkFilePath, int chunkSize, bool acknowledge) : UDPServer(port) {
+UDPDownloadTransmission::UDPDownloadTransmission(TimestampsHandler * timestampsHandler, int port, std::string benchmarkFilePath, int chunkSize, bool acknowledge) : UDPServer(port) {
     if (chunkSize > UDP_MAX_BUFFER_SIZE || chunkSize <= 0) {
         throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535");
     }
 
+    this->timestampsHandler = timestampsHandler;
     this->benchmarkChunks = getBenchmarkChunks(benchmarkFilePath, chunkSize);
     this->benchmarkChunksMutex = new std::mutex();
     this->chunkSize = chunkSize;
@@ -26,19 +27,27 @@ void UDPDownloadTransmission::serverLogic() {
     while (getRunning()) {
         readBytes = recvfrom(getSockDesc(), readBuffer, 1, 0, (struct sockaddr *)&clientSockAddr, &clientSockAddrSize);
         if (readBytes <= 0) {
-            std::cerr<<"Failed to receive client request";
+            std::cerr<<"Failed to receive client request\r\n";
             continue;
         }
 
         char * clientIP = inet_ntoa(clientSockAddr.sin_addr);
 
+        int benchmarkTotalBytes = (benchmarkChunks.size() - 1) * benchmarkChunks.at(0).size() + benchmarkChunks.at(benchmarkChunks.size() - 1).size();
+
         if (acknowledge) {
             if (chunkCounter.find(clientIP) == chunkCounter.end()) {
+                this->timestampsHandler->setTimestamp(clientIP, std::time(nullptr));
+                this->timestampsHandler->setBytesCount(clientIP, benchmarkTotalBytes);
+                
                 setChunkCounterValue(clientIP, 0);
             }
             std::thread provideChunkThread(&UDPDownloadTransmission::provideBenchmarkChunk, this, clientSockAddr, clientIP);
             provideChunkThread.detach();
         } else {
+            this->timestampsHandler->setTimestamp(clientIP, std::time(nullptr));
+            this->timestampsHandler->setBytesCount(clientIP, benchmarkTotalBytes);
+            
             std::thread provideAllChunksThread(&UDPDownloadTransmission::provideAllBenchmarkChunks, this, clientSockAddr, clientIP);
             provideAllChunksThread.detach();
         }

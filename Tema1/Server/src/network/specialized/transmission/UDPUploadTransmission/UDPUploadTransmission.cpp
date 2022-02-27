@@ -1,11 +1,12 @@
 #include "UDPUploadTransmission.h"
 
 
-UDPUploadTransmission::UDPUploadTransmission(int port, int chunkSize, bool acknowledge) : UDPServer(port) {
+UDPUploadTransmission::UDPUploadTransmission(TimestampsHandler * timestampsHandler, int port, int chunkSize, bool acknowledge) : UDPServer(port) {
     if (chunkSize > UDP_MAX_BUFFER_SIZE || chunkSize <= 0) {
         throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535");
     }
 
+    this->timestampsHandler = timestampsHandler;
     this->chunkSize = chunkSize;
     this->acknowledge = acknowledge;
     this->byteCounterMutex = new std::mutex();
@@ -23,7 +24,7 @@ void UDPUploadTransmission::serverLogic() {
     while (getRunning()) {
         readBytes = recvfrom(getSockDesc(), readBuffer, chunkSize, 0, (struct sockaddr *)&clientSockAddr, &clientSockAddrSize);
         if (readBytes <= 0) {
-            std::cerr<<"Failed to receive client request";
+            std::cerr<<"Failed to receive client request\r\n";
             continue;
         }
 
@@ -38,6 +39,9 @@ void UDPUploadTransmission::serverLogic() {
         if (acknowledge) {
             sendto(getSockDesc(), "1", 1, 0, (struct sockaddr *)&clientSockAddr, sizeof(clientSockAddr));
         }
+
+        this->timestampsHandler->setTimestamp(clientIP, std::time(nullptr));
+        this->timestampsHandler->setBytesCount(clientIP, byteCounter[clientIP]);
     }
 }
 

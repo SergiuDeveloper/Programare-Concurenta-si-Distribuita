@@ -1,11 +1,12 @@
 #include "TCPUploadTransmission.h"
 
 
-TCPUploadTransmission::TCPUploadTransmission(int port, int chunkSize, bool acknowledge) : TCPServer(port) {
+TCPUploadTransmission::TCPUploadTransmission(TimestampsHandler * timestampsHandler, int port, int chunkSize, bool acknowledge) : TCPServer(port) {
     if (chunkSize > TCP_MAX_BUFFER_SIZE || chunkSize <= 0) {
         throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535");
     }
     
+    this->timestampsHandler = timestampsHandler;
     this->chunkSize = chunkSize;
     this->acknowledge = acknowledge;
 }
@@ -31,4 +32,7 @@ void TCPUploadTransmission::receiveBenchmarkFile(int clientSockDesc, char * clie
 
         totalReadBytes += readBytes;
     }
+
+    this->timestampsHandler->setTimestamp(clientIP, std::time(nullptr));
+    this->timestampsHandler->setBytesCount(clientIP, totalReadBytes);
 }

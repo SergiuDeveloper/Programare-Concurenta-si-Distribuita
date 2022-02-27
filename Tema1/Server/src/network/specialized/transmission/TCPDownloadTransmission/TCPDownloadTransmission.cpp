@@ -1,11 +1,12 @@
 #include "TCPDownloadTransmission.h"
 
 
-TCPDownloadTransmission::TCPDownloadTransmission(int port, std::string benchmarkFilePath, int chunkSize, bool acknowledge) : TCPServer(port) {
+TCPDownloadTransmission::TCPDownloadTransmission(TimestampsHandler * timestampsHandler, int port, std::string benchmarkFilePath, int chunkSize, bool acknowledge) : TCPServer(port) {
     if (chunkSize > TCP_MAX_BUFFER_SIZE || chunkSize <= 0) {
         throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535");
     }
 
+    this->timestampsHandler = timestampsHandler;
     this->benchmarkChunks = getBenchmarkChunks(benchmarkFilePath, chunkSize);
     this->chunkSize = chunkSize;
     this->acknowledge = acknowledge;
@@ -16,6 +17,11 @@ void TCPDownloadTransmission::handleClient(int clientSockDesc, char * clientIP) 
 }
 
 void TCPDownloadTransmission::sendBenchmarkFile(int clientSockDesc, char * clientIP) {
+    int benchmarkTotalBytes = (benchmarkChunks.size() - 1) * benchmarkChunks.at(0).size() + benchmarkChunks.at(benchmarkChunks.size() - 1).size();
+    
+    this->timestampsHandler->setTimestamp(clientIP, std::time(nullptr));
+    this->timestampsHandler->setBytesCount(clientIP, benchmarkTotalBytes);
+    
     uint8_t * readBuffer = new uint8_t[1];
     int readBytes;
     unsigned char * benchmarkChunkArr;
@@ -27,10 +33,10 @@ void TCPDownloadTransmission::sendBenchmarkFile(int clientSockDesc, char * clien
             readBytes = read(clientSockDesc, readBuffer, 1);
             
             if (readBytes < 0) {
-                std::cerr<<"Failed to read from socket";
+                std::cerr<<"Failed to read from socket\r\n";
                 continue;
             } else if (readBytes == 0) {
-                std::cerr<<"Connection closed unexpectedly";
+                std::cerr<<"Connection closed unexpectedly\r\n";
                 break;
             }
         }

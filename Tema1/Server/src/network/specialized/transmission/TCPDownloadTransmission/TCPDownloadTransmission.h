@@ -7,16 +7,18 @@
 #include <vector>
 
 #include "../../../base/TCPServer/TCPServer.h"
+#include "../../control/TimestampsHandler/TimestampsHandler.h"
 
 
 class TCPDownloadTransmission : public TCPServer {
 private:
+    TimestampsHandler * timestampsHandler;
     std::vector<std::vector<unsigned char>> benchmarkChunks;
     int chunkSize;
     bool acknowledge;
 
 public:
-    TCPDownloadTransmission(int port, std::string benchmarkFilePath, int chunkSize, bool acknowledge);
+    TCPDownloadTransmission(TimestampsHandler * timestampsHandler, int port, std::string benchmarkFilePath, int chunkSize, bool acknowledge);
 
 private:
     void handleClient(int clientSockDesc, char * clientIP);

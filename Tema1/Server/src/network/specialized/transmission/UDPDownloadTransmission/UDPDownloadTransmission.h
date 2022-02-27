@@ -27,8 +27,8 @@ public:
 
 private:
     void serverLogic();
+    void provideAllBenchmarkChunks(struct sockaddr_in clientSockAddr, char * clientIP);
     void provideBenchmarkChunk(struct sockaddr_in clientSockAddr, char * clientIP);
-    void sendBenchmarkFile(int clientSockDesc, char * clientIP);
     std::vector<std::vector<unsigned char>> getBenchmarkChunks(std::string benchmarkFilePath, int chunkSize);
     void setChunkCounterValue(char * clientIP, int chunkIndex);
 };

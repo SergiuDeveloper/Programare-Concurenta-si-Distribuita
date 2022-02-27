@@ -31,11 +31,24 @@ void UDPDownloadTransmission::serverLogic() {
         }
 
         char * clientIP = inet_ntoa(clientSockAddr.sin_addr);
-        if (chunkCounter.find(clientIP) == chunkCounter.end()) {
-            setChunkCounterValue(clientIP, 0);
-        }
 
-        provideBenchmarkChunk(clientSockAddr, clientIP);
+        if (acknowledge) {
+            if (chunkCounter.find(clientIP) == chunkCounter.end()) {
+                setChunkCounterValue(clientIP, 0);
+            }
+            std::thread provideChunkThread(&UDPDownloadTransmission::provideBenchmarkChunk, this, clientSockAddr, clientIP);
+            provideChunkThread.detach();
+        } else {
+            std::thread provideAllChunksThread(&UDPDownloadTransmission::provideAllBenchmarkChunks, this, clientSockAddr, clientIP);
+            provideAllChunksThread.detach();
+        }
+    }
+}
+
+void UDPDownloadTransmission::provideAllBenchmarkChunks(struct sockaddr_in clientSockAddr, char * clientIP) {
+    for (std::vector<unsigned char> benchmarkChunk: benchmarkChunks) {
+        unsigned char * benchmarkChunkArr = &benchmarkChunk[0];
+        sendto(getSockDesc(), benchmarkChunkArr, benchmarkChunk.size(), 0, (struct sockaddr *)&clientSockAddr, sizeof(clientSockAddr));
     }
 }
 

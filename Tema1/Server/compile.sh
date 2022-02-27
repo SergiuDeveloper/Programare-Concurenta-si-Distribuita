@@ -1,3 +1,5 @@
+mkdir -p build && \
+
 g++ -pthread \
 src/network/base/TCPServer/TCPServer.cpp \
 src/network/base/UDPServer/UDPServer.cpp \
@@ -6,4 +8,6 @@ src/network/specialized/transmission/TCPDownloadTransmission/TCPDownloadTransmis
 src/network/specialized/transmission/TCPUploadTransmission/TCPUploadTransmission.cpp \
 src/network/specialized/transmission/UDPDownloadTransmission/UDPDownloadTransmission.cpp \
 src/network/specialized/transmission/UDPUploadTransmission/UDPUploadTransmission.cpp \
-src/network/specialized/control/ControlServer/ControlServer.cpp
+src/network/specialized/control/ControlServer/ControlServer.cpp \
+src/main.cpp \
+-o build/Server.out

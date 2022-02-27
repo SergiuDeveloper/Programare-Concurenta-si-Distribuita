@@ -48,7 +48,7 @@ public:
 private:
     void handleClient(int clientSockDesc, char * clientIP);
     void sendPorts(int clientSockDesc, char * clientIP);
-    bool satisfyRequest(int clientSockDesc, char * clientIP, bool sleepBeforeRespond);
+    bool satisfyRequest(int clientSockDesc, char * clientIP, bool uploadOperation);
 };
 
 #endif

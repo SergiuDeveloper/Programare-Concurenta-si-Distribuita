@@ -74,14 +74,14 @@ void ControlServer::handleClient(int clientSockDesc, char * clientIP) {
 
     sendPorts(clientSockDesc, clientIP);
 
-    bool sleepBeforeRespond = false;
+    bool uploadOperation = false;
     bool success;
     for (int i = 0; i < BENCHMARKS_COUNT; i++) {
-        success = satisfyRequest(clientSockDesc, clientIP, sleepBeforeRespond);
+        success = satisfyRequest(clientSockDesc, clientIP, uploadOperation);
         if (!success) {
             return;
         }
-        sleepBeforeRespond = !sleepBeforeRespond;
+        uploadOperation = !uploadOperation;
     }
 
     activeClientsMutex->lock();
@@ -100,7 +100,7 @@ void ControlServer::sendPorts(int clientSockDesc, char * clientIP) {
     send(clientSockDesc, &udpUploadStreamServerPort, sizeof(int), 0);
 }
 
-bool ControlServer::satisfyRequest(int clientSockDesc, char * clientIP, bool sleepBeforeRespond) {
+bool ControlServer::satisfyRequest(int clientSockDesc, char * clientIP, bool uploadOperation) {
     uint8_t * readBuffer = new uint8_t[1];
     int readBytes = read(clientSockDesc, readBuffer, 1);
     if (readBytes <= 0) {
@@ -111,7 +111,7 @@ bool ControlServer::satisfyRequest(int clientSockDesc, char * clientIP, bool sle
         return false;
     }
 
-    if (sleepBeforeRespond) {
+    if (uploadOperation) {
         usleep(SLEEP_TIME_BEFORE_UPLOAD_RESPOND);
     }
 

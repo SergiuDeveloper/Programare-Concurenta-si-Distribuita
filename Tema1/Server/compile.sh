@@ -1,0 +1,1 @@
+g++ -pthread -I/usr/include/opencv4 ../../../base/TCPServer/TCPServer.cpp ../../../base/UDPServer/UDPServer.cpp TCPUploadTransmission.cpp -L/usr/local/lib -lopencv_videoio -lopencv_core

@@ -11,7 +11,7 @@
 
 
 class TCPClient {
-private:
+protected:
     char * ip;
     int port;
     int sockDesc;

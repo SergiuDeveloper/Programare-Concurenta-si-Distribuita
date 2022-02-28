@@ -1,11 +1,12 @@
 #include "UDPUploadTransmissionClient.h"
 
 
-UDPUploadTransmissionClient::UDPUploadTransmissionClient(char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : UDPClient(ip, port) {
+UDPUploadTransmissionClient::UDPUploadTransmissionClient(TimestampsHandler * timestampsHandler, char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : UDPClient(ip, port) {
     if (chunkSize > UDP_MAX_BUFFER_SIZE || chunkSize <= 0) {
         throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535)");
     }
     
+    this->timestampsHandler = timestampsHandler;
     this->benchmarkChunks = getBenchmarkChunks(benchmarkFilePath, chunkSize);
     this->chunkSize = chunkSize;
     this->benchmarkFilePath = benchmarkFilePath;
@@ -15,6 +16,9 @@ UDPUploadTransmissionClient::UDPUploadTransmissionClient(char * ip, int port, in
 void UDPUploadTransmissionClient::clientLogic(int sockDesc, struct sockaddr_in serverSockAddr) {
     int benchmarkTotalBytes = (benchmarkChunks.size() - 1) * benchmarkChunks.at(0).size() + benchmarkChunks.at(benchmarkChunks.size() - 1).size();
     
+    this->timestampsHandler->setTimestamp(std::time(nullptr));
+    this->timestampsHandler->setBytesCount(benchmarkTotalBytes);
+
     uint8_t * readBuffer = new uint8_t[1];
     socklen_t serverSockAddrSize = sizeof(serverSockAddr);
     for (std::vector<unsigned char> benchmarkChunk: benchmarkChunks) {
@@ -24,6 +28,12 @@ void UDPUploadTransmissionClient::clientLogic(int sockDesc, struct sockaddr_in s
         if (acknowledge) {
             recvfrom(sockDesc, readBuffer, 1, 0, (struct sockaddr *)&serverSockAddr, &serverSockAddrSize);
         }
+    }
+
+    if (acknowledge) {
+        this->timestampsHandler->udpUploadDone();
+    } else {
+        this->timestampsHandler->udpUploadStreamDone();
     }
 }
 

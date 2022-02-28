@@ -1,11 +1,12 @@
 #include "UDPDownloadTransmissionClient.h"
 
 
-UDPDownloadTransmissionClient::UDPDownloadTransmissionClient(char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : UDPClient(ip, port) {
+UDPDownloadTransmissionClient::UDPDownloadTransmissionClient(TimestampsHandler * timestampsHandler, char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : UDPClient(ip, port) {
     if (chunkSize > UDP_MAX_BUFFER_SIZE || chunkSize <= 0) {
         throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535)");
     }
     
+    this->timestampsHandler = timestampsHandler;
     this->chunkSize = chunkSize;
     this->benchmarkFilePath = benchmarkFilePath;
     this->acknowledge = acknowledge;
@@ -39,4 +40,12 @@ void UDPDownloadTransmissionClient::clientLogic(int sockDesc, struct sockaddr_in
     }
 
     benchmarkFile.close();
+
+    this->timestampsHandler->setTimestamp(std::time(nullptr));
+    this->timestampsHandler->setBytesCount(totalReadBytes);
+    if (acknowledge) {
+        this->timestampsHandler->udpDownloadDone();
+    } else {
+        this->timestampsHandler->udpDownloadStreamDone();
+    }
 }

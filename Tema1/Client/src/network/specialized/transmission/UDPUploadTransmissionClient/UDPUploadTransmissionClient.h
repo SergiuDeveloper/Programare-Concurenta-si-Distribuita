@@ -6,17 +6,19 @@
 #include <vector>
 
 #include "../../../base/UDPClient/UDPClient.h"
+#include "../../control/TimestampsHandler/TimestampsHandler.h"
 
 
 class UDPUploadTransmissionClient : public UDPClient {
 private:
+    TimestampsHandler * timestampsHandler;
     std::vector<std::vector<unsigned char>> benchmarkChunks;
     int chunkSize;
     std::string benchmarkFilePath;
     bool acknowledge;
 
 public:
-    UDPUploadTransmissionClient(char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge);
+    UDPUploadTransmissionClient(TimestampsHandler * timestampsHandler, char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge);
 
 private:
     void clientLogic(int sockDesc, struct sockaddr_in serverSockAddr);

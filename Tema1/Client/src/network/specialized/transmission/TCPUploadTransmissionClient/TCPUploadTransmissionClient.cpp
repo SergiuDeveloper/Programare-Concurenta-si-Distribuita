@@ -1,11 +1,12 @@
 #include "TCPUploadTransmissionClient.h"
 
 
-TCPUploadTransmissionClient::TCPUploadTransmissionClient(char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : TCPClient(ip, port) {
+TCPUploadTransmissionClient::TCPUploadTransmissionClient(TimestampsHandler * timestampsHandler, char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : TCPClient(ip, port) {
     if (chunkSize > TCP_MAX_BUFFER_SIZE || chunkSize <= 0) {
         throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535)");
     }
-    
+
+    this->timestampsHandler = timestampsHandler;
     this->benchmarkChunks = getBenchmarkChunks(benchmarkFilePath, chunkSize);
     this->chunkSize = chunkSize;
     this->benchmarkFilePath = benchmarkFilePath;
@@ -15,6 +16,9 @@ TCPUploadTransmissionClient::TCPUploadTransmissionClient(char * ip, int port, in
 void TCPUploadTransmissionClient::clientLogic(int sockDesc) {
     int benchmarkTotalBytes = (benchmarkChunks.size() - 1) * benchmarkChunks.at(0).size() + benchmarkChunks.at(benchmarkChunks.size() - 1).size();
     
+    this->timestampsHandler->setTimestamp(std::time(nullptr));
+    this->timestampsHandler->setBytesCount(benchmarkTotalBytes);
+
     uint8_t * readBuffer = new uint8_t[1];
     int readBytes;
     unsigned char * benchmarkChunkArr;
@@ -33,6 +37,12 @@ void TCPUploadTransmissionClient::clientLogic(int sockDesc) {
                 break;
             }
         }
+    }
+
+    if (acknowledge) {
+        this->timestampsHandler->tcpUploadDone();
+    } else {
+        this->timestampsHandler->tcpUploadStreamDone();
     }
 }
 

@@ -7,5 +7,7 @@ src/network/specialized/transmission/TCPDownloadTransmissionClient/TCPDownloadTr
 src/network/specialized/transmission/TCPUploadTransmissionClient/TCPUploadTransmissionClient.cpp \
 src/network/specialized/transmission/UDPDownloadTransmissionClient/UDPDownloadTransmissionClient.cpp \
 src/network/specialized/transmission/UDPUploadTransmissionClient/UDPUploadTransmissionClient.cpp \
+src/network/specialized/control/TimestampsHandler/TimestampsHandler.cpp \
+src/network/specialized/control/ControlClient/ControlClient.cpp \
 src/main.cpp \
 -o build/Client.out

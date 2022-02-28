@@ -1,11 +1,12 @@
 #include "TCPDownloadTransmissionClient.h"
 
 
-TCPDownloadTransmissionClient::TCPDownloadTransmissionClient(char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : TCPClient(ip, port) {
+TCPDownloadTransmissionClient::TCPDownloadTransmissionClient(TimestampsHandler * timestampsHandler, char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : TCPClient(ip, port) {
     if (chunkSize > TCP_MAX_BUFFER_SIZE || chunkSize <= 0) {
         throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535)");
     }
     
+    this->timestampsHandler = timestampsHandler;
     this->chunkSize = chunkSize;
     this->benchmarkFilePath = benchmarkFilePath;
     this->acknowledge = acknowledge;
@@ -36,4 +37,12 @@ void TCPDownloadTransmissionClient::clientLogic(int sockDesc) {
     }
 
     benchmarkFile.close();
+
+    this->timestampsHandler->setTimestamp(std::time(nullptr));
+    this->timestampsHandler->setBytesCount(totalReadBytes);
+    if (acknowledge) {
+        this->timestampsHandler->tcpDownloadDone();
+    } else {
+        this->timestampsHandler->tcpDownloadStreamDone();
+    }
 }

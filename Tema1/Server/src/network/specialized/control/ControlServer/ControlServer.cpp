@@ -110,9 +110,9 @@ bool ControlServer::satisfyRequest(int clientSockDesc, char * clientIP, bool upl
         activeClientsMutex->unlock();
         return false;
     }
-
+    
     if (uploadOperation) {
-        usleep(SLEEP_TIME_BEFORE_UPLOAD_RESPOND);
+        usleep(SLEEP_TIME_BEFORE_RESPONSE);
     }
 
     time_t timestamp = getTimestamp(clientIP);

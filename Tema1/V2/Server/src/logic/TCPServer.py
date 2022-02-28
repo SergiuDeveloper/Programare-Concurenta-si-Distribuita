@@ -47,6 +47,7 @@ class TCPServer:
         else:
             file_name = f"{'.'.join(file_name_parts[:-1])}_{category}.{file_name_parts[-1]}"
 
+        chunks_count = 0
         with open(file_name, "wb") as benchmark_file:
             while self.__get_running() and conn:
                 chunk = conn.recv(self.__chunk_size)
@@ -55,13 +56,14 @@ class TCPServer:
                     print(f"{client_ip} sent {bytes_count} bytes")
                     conn.close()
 
-                    BenchmarkData.add_data(client_ip, category, time(), bytes_count)
+                    BenchmarkData.add_data(client_ip, category, time(), bytes_count, chunks_count)
 
                     return
 
                 benchmark_file.write(chunk)
 
                 bytes_count += len(chunk)
+                chunks_count += 1
 
                 if self.__ack:
                     self.__acknowledge(conn)

@@ -58,12 +58,17 @@ def get_benchmark_data():
     client_ip = request.remote_addr
     response = {}
 
+    print()
+    print(f"Client {client_ip}")
     for category in CATEGORIES:
         data = BenchmarkData.get_data(client_ip, category)
         response[category] = {
-            'timestamp': data[0],
-            'bytes_count': data[1]
+            "timestamp": data[0],
+            "bytes_count": data[1]
         }
+
+        print(f"{category}: Received {data[2]} chunks, {data[1]} bytes")
+    print()
 
     BenchmarkData.remove_data(client_ip)
 

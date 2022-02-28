@@ -6,11 +6,11 @@ class BenchmarkData:
     __data_lock = Lock()
 
     @staticmethod
-    def add_data(client_ip, category, timestamp, bytes_count):
+    def add_data(client_ip, category, timestamp, bytes_count, chunks_count):
         BenchmarkData.__data_lock.acquire()
         if client_ip not in BenchmarkData.__data:
             BenchmarkData.__data[client_ip] = {}
-        BenchmarkData.__data[client_ip][category] = (timestamp, bytes_count)
+        BenchmarkData.__data[client_ip][category] = (timestamp, bytes_count, chunks_count)
         BenchmarkData.__data_lock.release()
 
     @staticmethod

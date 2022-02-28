@@ -49,8 +49,10 @@ class UDPServer:
         with open(file_name, "ab") as benchmark_file:
             benchmark_file.write(chunk)
 
-            total_bytes = BenchmarkData.get_data(client_ip, category)[1]
-            BenchmarkData.add_data(client_ip, category, time(), total_bytes + len(chunk))
+            data = BenchmarkData.get_data(client_ip, category)
+            total_bytes = data[1]
+            chunks_count = data[2]
+            BenchmarkData.add_data(client_ip, category, time(), total_bytes + len(chunk), chunks_count + 1)
 
             if self.__ack:
                 self.__acknowledge(sock, address)
@@ -61,7 +63,7 @@ class UDPServer:
         
         with open(file_name, "wb") as benchmark_file:
             pass
-        BenchmarkData.add_data(client_ip, category, time(), 0)
+        BenchmarkData.add_data(client_ip, category, time(), 0, 0)
 
     def __acknowledge(self, sock, address):
         try:

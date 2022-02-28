@@ -21,6 +21,7 @@ class TCPClient:
 
             timestamp = time()
             bytes_count = 0
+            chunks_count = 0
 
             for chunk in tqdm(self.__read_file_chunks(), total=os.path.getsize(self.__benchmark_file_path) // self.__chunk_size + 1):
                 sock.send(chunk)
@@ -28,8 +29,9 @@ class TCPClient:
                     self.__await_ack(sock)
 
                 bytes_count += len(chunk)
+                chunks_count += 1
 
-        return timestamp, bytes_count
+        return timestamp, bytes_count, chunks_count
 
     def __await_ack(self, sock):
         while len(sock.recv(1)) < 0:

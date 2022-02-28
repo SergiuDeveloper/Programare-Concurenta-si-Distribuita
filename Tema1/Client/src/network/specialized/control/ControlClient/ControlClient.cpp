@@ -19,7 +19,11 @@ void ControlClient::clientLogic(int sockDesc) {
 }
 
 void ControlClient::tcpDownloadDone() {
+    usleep(1000000);
+
     send(sockDesc, "1", 1, 0);
+
+    usleep(1000000);
 
     time_t startTimestamp;
     int expectedBytesCount = read(sockDesc, &startTimestamp, sizeof(time_t));
@@ -30,12 +34,18 @@ void ControlClient::tcpDownloadDone() {
     time_t endTimestamp = getTimestamp();
     int bytesCount = getBytesCount();
 
+    std::cout<<startTimestamp<<"\n"<<endTimestamp<<"\n"<<expectedBytesCount<<"\n"<<bytesCount<<"\n\n";
+
     TCPUploadTransmissionClient * tcpUploadTransmissionClient = new TCPUploadTransmissionClient(this, ip, tcpDownloadServerPort, chunkSize, benchmarkFilePath, true);
     tcpUploadTransmissionClient->run();
 }
 
 void ControlClient::tcpUploadDone() {
+    usleep(1000000);
+
     send(sockDesc, "1", 1, 0);
+
+    usleep(1000000);
 
     time_t startTimestamp = getTimestamp();
     int expectedBytesCount = getBytesCount();
@@ -46,11 +56,15 @@ void ControlClient::tcpUploadDone() {
         throw new std::logic_error("Failed to retrieve data from server");
     }
 
+    std::cout<<startTimestamp<<"\n"<<endTimestamp<<"\n"<<expectedBytesCount<<"\n"<<bytesCount<<"\n\n";
+
     UDPDownloadTransmissionClient * udpDownloadTransmissionClient = new UDPDownloadTransmissionClient(this, ip, tcpDownloadServerPort, chunkSize, benchmarkFilePath, true);
     udpDownloadTransmissionClient->run();
 }
 
 void ControlClient::udpDownloadDone() {
+    usleep(1000000);
+
     send(sockDesc, "1", 1, 0);
 
     time_t startTimestamp;
@@ -61,6 +75,8 @@ void ControlClient::udpDownloadDone() {
 
     time_t endTimestamp = getTimestamp();
     int bytesCount = getBytesCount();
+
+    std::cout<<startTimestamp<<"\n"<<endTimestamp<<"\n"<<expectedBytesCount<<"\n"<<bytesCount<<"\n\n";
 
     UDPUploadTransmissionClient * udpDownloadTransmissionClient = new UDPUploadTransmissionClient(this, ip, tcpDownloadServerPort, chunkSize, benchmarkFilePath, true);
     udpDownloadTransmissionClient->run();
@@ -141,6 +157,8 @@ void ControlClient::udpUploadStreamDone() {
     if (bytesCount <= 0) {
         throw new std::logic_error("Failed to retrieve data from server");
     }
+
+    std::cout<<"Benchmark done\r\n";
 
     done = true;
 }

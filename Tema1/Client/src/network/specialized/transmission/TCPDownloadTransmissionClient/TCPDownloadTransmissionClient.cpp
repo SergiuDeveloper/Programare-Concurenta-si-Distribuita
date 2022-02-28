@@ -18,7 +18,6 @@ void TCPDownloadTransmissionClient::clientLogic(int sockDesc) {
     uint8_t * readBuffer = new uint8_t[chunkSize];
     int readBytes;
     int totalReadBytes = 0;
-
     while ((readBytes = read(sockDesc, readBuffer, chunkSize)) != 0) {
         if (readBytes < 0) {
             std::cerr<<"Failed to read from socket\r\n";

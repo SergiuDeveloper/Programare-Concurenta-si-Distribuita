@@ -1,4 +1,4 @@
-#define IP (char *)"192.168.0.1"
+#define IP (char *)"0.0.0.0"
 #define PORT 8000
 
 #define BENCHMARK_FILE_PATH "../data/test.mp4"
@@ -13,6 +13,8 @@ int main(int argc, char ** argv) {
     
     while (!controlClient.isDone()) {
     }
+
+    std::cout<<"Done\r\n";
 
     return 0;
 }

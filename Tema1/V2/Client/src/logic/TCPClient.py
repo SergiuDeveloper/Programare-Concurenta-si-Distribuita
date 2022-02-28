@@ -1,6 +1,8 @@
 from time import time
+from tqdm import tqdm
 
 import socket
+import os
 
 
 class TCPClient:
@@ -20,7 +22,7 @@ class TCPClient:
             timestamp = time()
             bytes_count = 0
 
-            for chunk in self.__read_file_chunks():
+            for chunk in tqdm(self.__read_file_chunks(), total=os.path.getsize(self.__benchmark_file_path) // self.__chunk_size + 1):
                 sock.send(chunk)
                 if self.__ack:
                     self.__await_ack(sock)

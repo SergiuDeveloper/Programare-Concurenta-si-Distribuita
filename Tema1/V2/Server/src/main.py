@@ -1,21 +1,30 @@
-HOST = "127.0.0.1"
-PORT = 8000
-
-TCP_SERVER_PORT = 8001
-TCP_STREAM_SERVER_PORT = 8002
-
-BENCHMARK_FILE_PATH = "../data/test.mp4"
-CHUNK_SIZE = 65535
-
-CATEGORIES = ['tcp_server', 'tcp_stream_server']
-
-
 from flask import Flask, request, jsonify
 from threading import Thread
 from time import sleep
+from configparser import ConfigParser
 
 from logic.TCPServer import TCPServer
+from logic.UDPServer import UDPServer
 from logic.BenchmarkData import BenchmarkData
+
+
+CONFIG_FILE_PATH = "../configuration/config.ini"
+
+config_parser = ConfigParser()
+config_parser.read(CONFIG_FILE_PATH)
+
+HOST = config_parser['default']['HOST']
+PORT = int(config_parser['default']['PORT'])
+
+TCP_SERVER_PORT = int(config_parser['default']['TCP_SERVER_PORT'])
+TCP_STREAM_SERVER_PORT = int(config_parser['default']['TCP_STREAM_SERVER_PORT'])
+UDP_SERVER_PORT = int(config_parser['default']['UDP_SERVER_PORT'])
+UDP_STREAM_SERVER_PORT = int(config_parser['default']['UDP_STREAM_SERVER_PORT'])
+
+BENCHMARK_FILE_PATH = config_parser['default']['BENCHMARK_FILE_PATH']
+CHUNK_SIZE = int(config_parser['default']['CHUNK_SIZE'])
+
+CATEGORIES = ['tcp_server', 'tcp_stream_server', 'udp_server', 'udp_stream_server']
 
 
 app = Flask(__name__)
@@ -31,6 +40,14 @@ def get_addresses():
         'tcp_stream_server': {
             'host': HOST,
             'port': TCP_STREAM_SERVER_PORT
+        },
+        'udp_server': {
+            'host': HOST,
+            'port': UDP_SERVER_PORT
+        },
+        'udp_stream_server': {
+            'host': HOST,
+            'port': UDP_STREAM_SERVER_PORT
         }
     })
 
@@ -48,6 +65,8 @@ def get_benchmark_data():
             'bytes_count': data[1]
         }
 
+    BenchmarkData.remove_data(client_ip)
+
     return jsonify(response)
 
 
@@ -59,6 +78,14 @@ def launch_tcp_stream_server():
     tcp_stream_server = TCPServer(HOST, TCP_STREAM_SERVER_PORT, BENCHMARK_FILE_PATH, CHUNK_SIZE, False)
     tcp_stream_server.run()
 
+def launch_udp_server():
+    udp_server = UDPServer(HOST, UDP_SERVER_PORT, BENCHMARK_FILE_PATH, CHUNK_SIZE, True)
+    udp_server.run()
+
+def launch_udp_stream_server():
+    udp_stream_server = UDPServer(HOST, UDP_STREAM_SERVER_PORT, BENCHMARK_FILE_PATH, CHUNK_SIZE, False)
+    udp_stream_server.run()
+
 
 if __name__ == "__main__":
     launch_tcp_server_thread = Thread(target=launch_tcp_server)
@@ -66,5 +93,11 @@ if __name__ == "__main__":
 
     launch_tcp_stream_server_thread = Thread(target=launch_tcp_stream_server)
     launch_tcp_stream_server_thread.start()
+
+    launch_udp_server_thread = Thread(target=launch_udp_server)
+    launch_udp_server_thread.start()
+
+    launch_udp_stream_server_thread = Thread(target=launch_udp_stream_server)
+    launch_udp_stream_server_thread.start()
 
     app.run(port=PORT)

@@ -3,7 +3,7 @@
 
 TCPUploadTransmission::TCPUploadTransmission(TimestampsHandler * timestampsHandler, int port, int chunkSize, bool acknowledge) : TCPServer(port) {
     if (chunkSize > TCP_MAX_BUFFER_SIZE || chunkSize <= 0) {
-        throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535");
+        throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535)");
     }
     
     this->timestampsHandler = timestampsHandler;

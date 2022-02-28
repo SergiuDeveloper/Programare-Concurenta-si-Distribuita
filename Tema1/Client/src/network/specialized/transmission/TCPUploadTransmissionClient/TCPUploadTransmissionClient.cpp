@@ -1,26 +1,19 @@
-#include "TCPDownloadTransmission.h"
+#include "TCPUploadTransmissionClient.h"
 
 
-TCPDownloadTransmission::TCPDownloadTransmission(TimestampsHandler * timestampsHandler, int port, std::string benchmarkFilePath, int chunkSize, bool acknowledge) : TCPServer(port) {
+TCPUploadTransmissionClient::TCPUploadTransmissionClient(char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : TCPClient(ip, port) {
     if (chunkSize > TCP_MAX_BUFFER_SIZE || chunkSize <= 0) {
         throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535)");
     }
-
-    this->timestampsHandler = timestampsHandler;
+    
     this->benchmarkChunks = getBenchmarkChunks(benchmarkFilePath, chunkSize);
     this->chunkSize = chunkSize;
+    this->benchmarkFilePath = benchmarkFilePath;
     this->acknowledge = acknowledge;
 }
 
-void TCPDownloadTransmission::handleClient(int clientSockDesc, char * clientIP) {
-    sendBenchmarkFile(clientSockDesc, clientIP);
-}
-
-void TCPDownloadTransmission::sendBenchmarkFile(int clientSockDesc, char * clientIP) {
+void TCPUploadTransmissionClient::clientLogic(int sockDesc) {
     int benchmarkTotalBytes = (benchmarkChunks.size() - 1) * benchmarkChunks.at(0).size() + benchmarkChunks.at(benchmarkChunks.size() - 1).size();
-    
-    this->timestampsHandler->setTimestamp(clientIP, std::time(nullptr));
-    this->timestampsHandler->setBytesCount(clientIP, benchmarkTotalBytes);
     
     uint8_t * readBuffer = new uint8_t[1];
     int readBytes;
@@ -43,7 +36,7 @@ void TCPDownloadTransmission::sendBenchmarkFile(int clientSockDesc, char * clien
     }
 }
 
-std::vector<std::vector<unsigned char>> TCPDownloadTransmission::getBenchmarkChunks(std::string benchmarkFilePath, int chunkSize) {
+std::vector<std::vector<unsigned char>> TCPUploadTransmissionClient::getBenchmarkChunks(std::string benchmarkFilePath, int chunkSize) {
     std::vector<std::vector<unsigned char>> chunks;
 
     std::ifstream benchmarkFile(benchmarkFilePath, std::ios::binary);

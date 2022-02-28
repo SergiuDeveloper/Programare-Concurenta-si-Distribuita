@@ -26,7 +26,7 @@ void TCPServer::run() {
     sockAddr.sin_family = AF_INET;
     sockAddr.sin_addr.s_addr = INADDR_ANY;
     sockAddr.sin_port = htons(port);
-    int bindRes = bind(sockDesc, (struct sockaddr *) &sockAddr, sizeof(sockAddr));
+    int bindRes = bind(sockDesc, (struct sockaddr *)&sockAddr, sizeof(sockAddr));
     if (bindRes < 0) {
         throw std::runtime_error("Failed to bind socket");
     }

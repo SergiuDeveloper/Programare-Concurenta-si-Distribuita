@@ -3,7 +3,7 @@
 
 UDPDownloadTransmission::UDPDownloadTransmission(TimestampsHandler * timestampsHandler, int port, std::string benchmarkFilePath, int chunkSize, bool acknowledge) : UDPServer(port) {
     if (chunkSize > UDP_MAX_BUFFER_SIZE || chunkSize <= 0) {
-        throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535");
+        throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535)");
     }
 
     this->timestampsHandler = timestampsHandler;
@@ -59,17 +59,20 @@ void UDPDownloadTransmission::provideAllBenchmarkChunks(struct sockaddr_in clien
         unsigned char * benchmarkChunkArr = &benchmarkChunk[0];
         sendto(getSockDesc(), benchmarkChunkArr, benchmarkChunk.size(), 0, (struct sockaddr *)&clientSockAddr, sizeof(clientSockAddr));
     }
+    sendto(getSockDesc(), "1", 1, 0, (struct sockaddr *)&clientSockAddr, sizeof(clientSockAddr));
 }
 
 void UDPDownloadTransmission::provideBenchmarkChunk(struct sockaddr_in clientSockAddr, char * clientIP) {
+    if (chunkCounter[clientIP] == benchmarkChunks.size() - 1) {
+        sendto(getSockDesc(), "1", 1, 0, (struct sockaddr *)&clientSockAddr, sizeof(clientSockAddr));
+        chunkCounter.erase(clientIP);
+        return;
+    }
+
     std::vector<unsigned char> benchmarkChunk = benchmarkChunks.at(chunkCounter[clientIP]);
     unsigned char * benchmarkChunkArr = &benchmarkChunks.at(chunkCounter[clientIP])[0];
     sendto(getSockDesc(), benchmarkChunkArr, benchmarkChunk.size(), 0, (struct sockaddr *)&clientSockAddr, sizeof(clientSockAddr));
 
-    if (chunkCounter[clientIP] == benchmarkChunks.size() - 1) {
-        chunkCounter.erase(clientIP);
-        return;
-    }
     setChunkCounterValue(clientIP, chunkCounter[clientIP] + 1);
 }
 

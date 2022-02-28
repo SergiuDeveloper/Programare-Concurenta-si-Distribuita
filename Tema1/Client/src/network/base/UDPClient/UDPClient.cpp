@@ -17,7 +17,7 @@ void UDPClient::run() {
     sockAddr.sin_addr.s_addr = inet_addr(ip);
     sockAddr.sin_port = htons(port);
 
-    clientLogic(sockDesc);
+    clientLogic(sockDesc, sockAddr);
 
     close(sockDesc);
 }

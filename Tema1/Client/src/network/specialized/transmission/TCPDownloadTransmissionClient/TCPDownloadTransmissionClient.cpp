@@ -20,11 +20,13 @@ void TCPDownloadTransmissionClient::clientLogic(int sockDesc) {
 
     while ((readBytes = read(sockDesc, readBuffer, chunkSize)) != 0) {
         if (readBytes < 0) {
-            std::cerr<<"Failed to read from socket";
+            std::cerr<<"Failed to read from socket\r\n";
             continue;
         }
 
-        benchmarkFile<<readBytes;
+        uint8_t * writeFileBuffer = new uint8_t[readBytes];
+        memcpy(writeFileBuffer, readBuffer, readBytes);
+        benchmarkFile<<writeFileBuffer;
 
         totalReadBytes += readBytes;
 

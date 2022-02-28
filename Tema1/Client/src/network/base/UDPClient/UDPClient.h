@@ -21,7 +21,7 @@ public:
     void run();
 
 protected:
-    virtual void clientLogic(int sockDesc) = 0;
+    virtual void clientLogic(int sockDesc, struct sockaddr_in serverSockAddr) = 0;
 };
 
 #endif

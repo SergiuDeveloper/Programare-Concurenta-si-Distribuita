@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 #include "../../../base/TCPClient/TCPClient.h"
 
@@ -19,7 +20,7 @@ public:
 
 private:
     void clientLogic(int sockDesc);
-    std::vector<std::vector<unsigned char>> getBenchmarkChunks(std::string benchmarkFilePath, int chunkSize)
+    std::vector<std::vector<unsigned char>> getBenchmarkChunks(std::string benchmarkFilePath, int chunkSize);
 };
 
 #endif

@@ -22,7 +22,7 @@ void TCPUploadTransmission::receiveBenchmarkFile(int clientSockDesc, char * clie
     int readBytes;
     while ((readBytes = read(clientSockDesc, readBuffer, chunkSize)) != 0) {
         if (readBytes < 0) {
-            std::cerr<<"Failed to read from socket";
+            std::cerr<<"Failed to read from socket\r\n";
             continue;
         }
 

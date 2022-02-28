@@ -1,8 +1,8 @@
-#include "TCPUploadTransmissionClient.h"
+#include "UDPUploadTransmissionClient.h"
 
 
-TCPUploadTransmissionClient::TCPUploadTransmissionClient(char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : TCPClient(ip, port) {
-    if (chunkSize > TCP_MAX_BUFFER_SIZE || chunkSize <= 0) {
+UDPUploadTransmissionClient::UDPUploadTransmissionClient(char * ip, int port, int chunkSize, std::string benchmarkFilePath, bool acknowledge) : UDPClient(ip, port) {
+    if (chunkSize > UDP_MAX_BUFFER_SIZE || chunkSize <= 0) {
         throw new std::logic_error("Invalid chunk size (1 <= CHUNK_SIZE <= 65535)");
     }
     
@@ -12,31 +12,22 @@ TCPUploadTransmissionClient::TCPUploadTransmissionClient(char * ip, int port, in
     this->acknowledge = acknowledge;
 }
 
-void TCPUploadTransmissionClient::clientLogic(int sockDesc) {
+void UDPUploadTransmissionClient::clientLogic(int sockDesc, struct sockaddr_in serverSockAddr) {
     int benchmarkTotalBytes = (benchmarkChunks.size() - 1) * benchmarkChunks.at(0).size() + benchmarkChunks.at(benchmarkChunks.size() - 1).size();
     
     uint8_t * readBuffer = new uint8_t[1];
-    int readBytes;
-    unsigned char * benchmarkChunkArr;
+    socklen_t serverSockAddrSize = sizeof(serverSockAddr);
     for (std::vector<unsigned char> benchmarkChunk: benchmarkChunks) {
-        benchmarkChunkArr = &benchmarkChunk[0];
-        send(sockDesc, benchmarkChunkArr, benchmarkChunk.size(), 0);
-
+        unsigned char * benchmarkChunkArr = &benchmarkChunk[0];
+        sendto(sockDesc, benchmarkChunkArr, benchmarkChunk.size(), 0, (struct sockaddr *)&serverSockAddr, sizeof(serverSockAddr));
+    
         if (acknowledge) {
-            readBytes = read(sockDesc, readBuffer, 1);
-            
-            if (readBytes < 0) {
-                std::cerr<<"Failed to read from socket\r\n";
-                continue;
-            } else if (readBytes == 0) {
-                std::cerr<<"Connection closed unexpectedly\r\n";
-                break;
-            }
+            recvfrom(sockDesc, readBuffer, 1, 0, (struct sockaddr *)&serverSockAddr, &serverSockAddrSize);
         }
     }
 }
 
-std::vector<std::vector<unsigned char>> TCPUploadTransmissionClient::getBenchmarkChunks(std::string benchmarkFilePath, int chunkSize) {
+std::vector<std::vector<unsigned char>> UDPUploadTransmissionClient::getBenchmarkChunks(std::string benchmarkFilePath, int chunkSize) {
     std::vector<std::vector<unsigned char>> chunks;
 
     std::ifstream benchmarkFile(benchmarkFilePath, std::ios::binary);

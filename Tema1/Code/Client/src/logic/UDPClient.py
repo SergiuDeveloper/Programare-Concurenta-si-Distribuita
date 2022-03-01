@@ -1,4 +1,4 @@
-MAX_ACK_WAIT_TIME = 3
+MAX_ACK_WAIT_TIME = 0.1
 
 
 from time import time

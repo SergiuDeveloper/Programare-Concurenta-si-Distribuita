@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Smart Monitoring</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="sessionSelector">
+        <div>
+            <label for="sessionId">Enter the desired session ID:</label>
+            <input type="text" id="sessionIdInput" name="sessionId">
+            <button id="joinSession">Join session</button>
+        </div>
+        <div>
+            <button id="createSession">Create session</button>
+        </div>
+    </div>
+
+    <div id="sessionContent">
+        <strong>Session <span id="sessionId"></span></strong>
+    </div>
+</body>
+
+<footer>
+    <script src="dom-handler.js"></script>
+</footer>
+
+</html>

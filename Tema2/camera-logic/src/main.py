@@ -1,6 +1,7 @@
 import cv2
 import socket
 import numpy as np
+import requests
 
 from configparser import ConfigParser
 from threading import Thread, Lock
@@ -21,9 +22,19 @@ def read_config(config_file_path):
         config_parser = ConfigParser()
         config_parser.read_file(config_file)
 
-        publish_server_address, publish_server_port, publish_timeout, write_buffer_size = config_parser['DEFAULT']['PublishServerAddress'], int(config_parser['DEFAULT']['PublishServerPort']), int(config_parser['DEFAULT']['PublishTimeout']), int(config_parser['DEFAULT']['WriteBufferSize'])
+        publish_server_address, publish_server_port, publish_timeout, write_buffer_size, session_id, get_session_endpoint = config_parser['DEFAULT']['PublishServerAddress'], int(config_parser['DEFAULT']['PublishServerPort']), int(config_parser['DEFAULT']['PublishTimeout']), int(config_parser['DEFAULT']['WriteBufferSize']), config_parser['DEFAULT']['SessionId'], config_parser['DEFAULT']['GetSessionEndpoint']
 
-    return publish_server_address, publish_server_port, publish_timeout, write_buffer_size
+    return publish_server_address, publish_server_port, publish_timeout, write_buffer_size, session_id, get_session_endpoint
+
+def session_exists(get_session_endpoint, session_id):
+    body = {
+        'sessionId': session_id
+    }
+    response = requests.get(get_session_endpoint, json=body).json()
+
+    session_exists = response['sessionExists']
+
+    return session_exists
 
 def publish_data(publish_server_address, publish_server_port, feed_data_function, publish_timeout, write_buffer_size):
     while True:
@@ -92,7 +103,10 @@ def feed_test_data_function():
 
 
 if __name__ == '__main__':
-    publish_server_address, publish_server_port, publish_timeout, write_buffer_size = read_config(CONFIG_FILE)
+    publish_server_address, publish_server_port, publish_timeout, write_buffer_size, session_id, get_session_endpoint = read_config(CONFIG_FILE)
+
+    if not session_exists(get_session_endpoint, session_id):
+        raise f'Session {session_id} does not exist'
 
     read_test_data_thread = Thread(target=read_test_data, args=(TEST_DATA_FILE,))
     read_test_data_thread.start()

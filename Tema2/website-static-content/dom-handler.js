@@ -9,12 +9,32 @@ document.getElementById("joinSession").onclick = function() {
         return;
     }
 
-    const sessionSelector = document.getElementById("sessionSelector");
-    sessionSelector.style.display = "none";
+    const getAlertRequest = new XMLHttpRequest();
+    getAlertRequest.open("POST", "https://gy37j7ly20.execute-api.eu-west-1.amazonaws.com/get-session", true);
+    getAlertRequest.onreadystatechange = function() {
+        if (getAlertRequest.readyState != 4) {
+            return;
+        }
+        if (getAlertRequest.status == 200) {
+            const response = JSON.parse(getAlertRequest.responseText);
+            const sessionExists = response["sessionExists"];
 
-    window.setInterval(function() {
-        get_frames_data()
-    }, 1000);
+            if (!sessionExists) {
+                alert("Session does not exist!");
+                return;
+            }
+
+            const sessionSelector = document.getElementById("sessionSelector");
+            sessionSelector.style.display = "none";
+
+            setAlertCheckboxValue(sessionId);
+        } else {
+            alert("Failed to get session data");
+        }
+    }
+    getAlertRequest.send(JSON.stringify({
+        "sessionId": sessionId
+    }));
 }
 
 document.getElementById("createSession").onclick = function() {
@@ -28,18 +48,31 @@ document.getElementById("createSession").onclick = function() {
             const response = JSON.parse(createSessionRequest.responseText);
             const sessionId = response["sessionId"];
 
-            const sessionIdSpan = document.getElementById("sessionId");
-            const sessionContent = document.getElementById("sessionContent");
-
-            sessionIdSpan.innerHTML = sessionId;
-            sessionContent.style.display = "block";
-
             const sessionSelector = document.getElementById("sessionSelector");
             sessionSelector.style.display = "none";
 
-            window.setInterval(function() {
-                get_frames_data(sessionId)
-            }, 1000);
+            const alertVal = false;
+            const alertEmailInput = document.getElementById("alertEmailInput");
+            const email = alertEmailInput.value;
+
+            const setAlertRequest = new XMLHttpRequest();
+            setAlertRequest.open("POST", "https://gy37j7ly20.execute-api.eu-west-1.amazonaws.com/set-alert", true);
+            setAlertRequest.onreadystatechange = function() {
+                if (setAlertRequest.readyState != 4) {
+                    return;
+                }
+                if (setAlertRequest.status == 200) {
+                    setAlertCheckboxValue(sessionId);
+                } else {
+                    alert("Failed to set alert data");
+                    return;
+                }
+            }
+            setAlertRequest.send(JSON.stringify({
+                "sessionId": sessionId,
+                "alert": alertVal,
+                "email": email
+            }));
         } else {
             alert("Failed to create session!")
         }
@@ -48,12 +81,71 @@ document.getElementById("createSession").onclick = function() {
 }
 
 document.getElementById("alertCheckbox").onclick = function() {
+    const sessionIdSpan = document.getElementById("sessionId");
+    const alertCheckbox = document.getElementById("alertCheckbox");
+    const alertEmail = document.getElementById("alertEmail");
 
+    const sessionId = sessionIdSpan.innerHTML;
+    const alertVal = alertCheckbox.checked;
+    const email = alertEmail.innerHTML;
+
+    const setAlertRequest = new XMLHttpRequest();
+    setAlertRequest.open("POST", "https://gy37j7ly20.execute-api.eu-west-1.amazonaws.com/set-alert", true);
+    setAlertRequest.onreadystatechange = function() {
+        if (setAlertRequest.readyState != 4) {
+            return;
+        }
+        if (setAlertRequest.status != 200) {
+            alert("Failed to set alert data");
+            return;
+        }
+    }
+    setAlertRequest.send(JSON.stringify({
+        "sessionId": sessionId,
+        "alert": alertVal,
+        "email": email
+    }));
 }
 
-function get_frames_data(sessionId) {
+function setAlertCheckboxValue(sessionId) {
+    const sessionIdSpan = document.getElementById("sessionId");
+    const sessionContent = document.getElementById("sessionContent");
+
+    const getAlertRequest = new XMLHttpRequest();
+    getAlertRequest.open("POST", "https://gy37j7ly20.execute-api.eu-west-1.amazonaws.com/get-alert", true);
+    getAlertRequest.onreadystatechange = function() {
+        if (getAlertRequest.readyState != 4) {
+            return;
+        }
+        if (getAlertRequest.status == 200) {
+            const response = JSON.parse(getAlertRequest.responseText);
+            const alert = response["alert"];
+            const email = response["email"];
+
+            const alertCheckbox = document.getElementById("alertCheckbox");
+            const alertEmail = document.getElementById("alertEmail");
+
+            alertCheckbox.checked = alert;
+            alertEmail.innerHTML = email;
+
+            sessionIdSpan.innerHTML = sessionId;
+            sessionContent.style.display = "block";
+
+            window.setInterval(function() {
+                getFramesData(sessionId)
+            }, 5000);
+        } else {
+            alert("Failed to get alert data");
+        }
+    }
+    getAlertRequest.send(JSON.stringify({
+        "sessionId": sessionId
+    }));
+}
+
+function getFramesData(sessionId) {
     const getCamerasRequest = new XMLHttpRequest();
-    getCamerasRequest.open("GET", "https://gy37j7ly20.execute-api.eu-west-1.amazonaws.com/get-cameras", true);
+    getCamerasRequest.open("POST", "https://gy37j7ly20.execute-api.eu-west-1.amazonaws.com/get-cameras", true);
     getCamerasRequest.onreadystatechange = function() {
         if (getCamerasRequest.readyState != 4) {
             return;
@@ -79,6 +171,6 @@ function get_frames_data(sessionId) {
         }
     }
     getCamerasRequest.send(JSON.stringify({
-        'sessionId': sessionId
+        "sessionId": sessionId
     }));
 }

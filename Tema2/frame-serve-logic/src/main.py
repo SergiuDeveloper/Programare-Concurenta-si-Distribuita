@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 import json
+import boto3
 
 from configparser import ConfigParser
 

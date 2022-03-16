@@ -30,7 +30,7 @@ def session_exists(get_session_endpoint, session_id):
     body = {
         'sessionId': session_id
     }
-    response = requests.get(get_session_endpoint, json=body).json()
+    response = requests.post(get_session_endpoint, json=body).json()
 
     session_exists = response['sessionExists']
 

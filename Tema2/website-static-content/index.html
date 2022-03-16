@@ -11,21 +11,23 @@
     <div id="sessionSelector">
         <div>
             <label for="sessionId">Enter the desired session ID:</label>
-            <input type="text" id="sessionIdInput" name="sessionId">
+            <input type="text" id="sessionIdInput" name="sessionId"><br>
             <button id="joinSession">Join session</button>
         </div>
         <div>
+            <label for="alertEmailInput">Email</label>
+            <input type="text" id="alertEmailInput" name="alertEmailInput"><br>
             <button id="createSession">Create session</button>
         </div>
     </div>
 
     <div id="sessionContent">
-        <strong>Session <span id="sessionId"></span></strong>
-
-        <label for="alertEmail">Alert</label>
-        <input type="text" id="alertEmail" name="alertEmail">
-        <label for="alertCheckbox">Alert</label>
-        <input type="checkbox" id="alertCheckbox" name="alertCheckbox">
+        <strong>
+            Session <span id="sessionId"></span><br>
+            <label id="alertEmailLabel">Alert email: <span id="alertEmail"></span></label><br>
+            <label for="alertCheckbox">Alert</label>
+            <input type="checkbox" id="alertCheckbox" name="alertCheckbox">
+        </strong>
     </div>
 </body>
 

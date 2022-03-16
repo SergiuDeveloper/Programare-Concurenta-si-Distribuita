@@ -30,8 +30,8 @@ def insert_session_id(dynamodb_client, dynamodb_data_table, session_id):
                 'sessionId': {
                     'S': session_id
                 },
-                'cameraId': {
-                    'S': '0'
+                'cameraIds': {
+                    'L': []
                 }
             },
             ConditionExpression='attribute_not_exists(sessionId)',

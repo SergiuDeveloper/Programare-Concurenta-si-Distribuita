@@ -5,9 +5,10 @@ import io
 
 from threading import Thread
 from configparser import ConfigParser
+from time import time
 
 
-CONFIG_FILE = '../configuration/config.ini'
+CONFIG_FILE = 'config.ini'
 
 
 def read_config(config_file_path):
@@ -15,11 +16,11 @@ def read_config(config_file_path):
         config_parser = ConfigParser()
         config_parser.read_file(config_file)
 
-        publish_server_address, publish_server_port, read_buffer_size, aws_region, object_detection_confidence_threshold = config_parser['DEFAULT']['PublishServerAddress'], int(config_parser['DEFAULT']['PublishServerPort']), int(config_parser['DEFAULT']['ReadBufferSize']), config_parser['DEFAULT']['AwsRegion'], float(config_parser['DEFAULT']['ObjectDetectionConfidenceThreshold'])
+        publish_server_address, publish_server_port, read_buffer_size, aws_region, session_id_length, camera_id_length, frames_s3_bucket_name = config_parser['DEFAULT']['PublishServerAddress'], int(config_parser['DEFAULT']['PublishServerPort']), int(config_parser['DEFAULT']['ReadBufferSize']), config_parser['DEFAULT']['AwsRegion'], int(config_parser['DEFAULT']['SessionIdLength']), int(config_parser['DEFAULT']['CameraIdLength']), config_parser['DEFAULT']['FramesS3BucketName']
 
-    return publish_server_address, publish_server_port, read_buffer_size, aws_region, object_detection_confidence_threshold
+    return publish_server_address, publish_server_port, read_buffer_size, aws_region, session_id_length, camera_id_length, frames_s3_bucket_name
 
-def get_publish_data(publish_server_address, publish_server_port, read_buffer_size, rekognition_client, object_detection_confidence_threshold):
+def get_publish_data(publish_server_address, publish_server_port, read_buffer_size, s3_client, session_id_length, camera_id_length, frames_s3_bucket_name):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((publish_server_address, publish_server_port))
     server_socket.listen()
@@ -29,10 +30,10 @@ def get_publish_data(publish_server_address, publish_server_port, read_buffer_si
     while True:
         connection, _ = server_socket.accept()
 
-        handle_client_thread = Thread(target=handle_client, args=(connection, read_buffer_size, rekognition_client, object_detection_confidence_threshold,))
+        handle_client_thread = Thread(target=handle_client, args=(connection, read_buffer_size, s3_client, session_id_length, camera_id_length, frames_s3_bucket_name,))
         handle_client_thread.start()
 
-def handle_client(connection, read_buffer_size, rekognition_client, object_detection_confidence_threshold):
+def handle_client(connection, read_buffer_size, s3_client, session_id_length, camera_id_length, frames_s3_bucket_name):
     frame = b''
 
     while True:
@@ -43,19 +44,23 @@ def handle_client(connection, read_buffer_size, rekognition_client, object_detec
 
         frame += data
 
+    session_id = frame[:session_id_length].decode()
+    camera_id = frame[session_id_length:session_id_length + camera_id_length].decode()
+    frame = frame[session_id_length + camera_id_length:]
+
     print(f'Received {len(frame)} bytes')
 
     frame = np.frombuffer(frame, dtype='uint8')
     frame_bytes = io.BytesIO(frame).getvalue()
-    
-    labels = rekognition_client.detect_labels(Image={'Bytes': frame_bytes})['Labels']
-    labels = [label['Name'] for label in labels if label['Confidence'] >= object_detection_confidence_threshold]
-    print(labels)
+
+    timestamp = time()
+    s3_client.put_object(Body=frame_bytes, Bucket=frames_s3_bucket_name, Key=f'{session_id}/{camera_id}/{timestamp}.jpg')
 
 
 if __name__ == '__main__':
-    publish_server_address, publish_server_port, read_buffer_size, aws_region, object_detection_confidence_threshold = read_config(CONFIG_FILE)
+    publish_server_address, publish_server_port, read_buffer_size, aws_region, session_id_length, camera_id_length, frames_s3_bucket_name = read_config(CONFIG_FILE)
 
     rekognition_client = boto3.client('rekognition', region_name=aws_region)
+    s3_client = boto3.client('s3')
     
-    get_publish_data(publish_server_address, publish_server_port, read_buffer_size, rekognition_client, object_detection_confidence_threshold)
+    get_publish_data(publish_server_address, publish_server_port, read_buffer_size, s3_client, session_id_length, camera_id_length, frames_s3_bucket_name)

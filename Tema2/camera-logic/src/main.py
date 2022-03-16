@@ -22,9 +22,9 @@ def read_config(config_file_path):
         config_parser = ConfigParser()
         config_parser.read_file(config_file)
 
-        publish_server_address, publish_server_port, publish_timeout, write_buffer_size, session_id, get_session_endpoint = config_parser['DEFAULT']['PublishServerAddress'], int(config_parser['DEFAULT']['PublishServerPort']), int(config_parser['DEFAULT']['PublishTimeout']), int(config_parser['DEFAULT']['WriteBufferSize']), config_parser['DEFAULT']['SessionId'], config_parser['DEFAULT']['GetSessionEndpoint']
+        publish_server_address, publish_server_port, publish_timeout, write_buffer_size, session_id, get_session_endpoint, register_camera_endpoint, camera_id = config_parser['DEFAULT']['PublishServerAddress'], int(config_parser['DEFAULT']['PublishServerPort']), int(config_parser['DEFAULT']['PublishTimeout']), int(config_parser['DEFAULT']['WriteBufferSize']), config_parser['DEFAULT']['SessionId'], config_parser['DEFAULT']['GetSessionEndpoint'], config_parser['DEFAULT']['RegisterCameraEndpoint'], (config_parser['DEFAULT']['CameraId'] if 'CameraId' in config_parser['DEFAULT'] else None)
 
-    return publish_server_address, publish_server_port, publish_timeout, write_buffer_size, session_id, get_session_endpoint
+    return publish_server_address, publish_server_port, publish_timeout, write_buffer_size, session_id, get_session_endpoint, register_camera_endpoint, camera_id
 
 def session_exists(get_session_endpoint, session_id):
     body = {
@@ -36,12 +36,15 @@ def session_exists(get_session_endpoint, session_id):
 
     return session_exists
 
-def publish_data(publish_server_address, publish_server_port, feed_data_function, publish_timeout, write_buffer_size):
+def publish_data(publish_server_address, publish_server_port, feed_data_function, publish_timeout, write_buffer_size, session_id, camera_id):
     while True:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         print(f'Contacting {publish_server_address}:{publish_server_port}')
         client_socket.connect((publish_server_address, publish_server_port))
+
+        client_socket.sendall(session_id.encode())
+        client_socket.sendall(camera_id.encode())
 
         image_bytes = feed_data_function()
         image_bytes_str = image_bytes.tobytes()
@@ -101,14 +104,35 @@ def feed_test_data_function():
 
     return current_frame_value
 
+def register_camera(session_id, register_camera_endpoint, config_file_path):
+    body = {
+        'sessionId': session_id
+    }
+    response = requests.post(register_camera_endpoint, json=body).json()
+
+    camera_id = response['cameraId']
+
+    with open(config_file_path) as config_file:
+        config_parser = ConfigParser()
+        config_parser.read_file(config_file)
+
+    with open(config_file_path, 'w') as config_file:
+        config_parser['DEFAULT']['CameraId'] = camera_id
+        config_parser.write(config_file)
+
+    return camera_id
+
 
 if __name__ == '__main__':
-    publish_server_address, publish_server_port, publish_timeout, write_buffer_size, session_id, get_session_endpoint = read_config(CONFIG_FILE)
+    publish_server_address, publish_server_port, publish_timeout, write_buffer_size, session_id, get_session_endpoint, register_camera_endpoint, camera_id = read_config(CONFIG_FILE)
 
     if not session_exists(get_session_endpoint, session_id):
         raise f'Session {session_id} does not exist'
 
+    if camera_id is None:
+        register_camera(session_id, register_camera_endpoint, CONFIG_FILE)
+
     read_test_data_thread = Thread(target=read_test_data, args=(TEST_DATA_FILE,))
     read_test_data_thread.start()
 
-    client_socket = publish_data(publish_server_address, publish_server_port, feed_test_data_function, publish_timeout, write_buffer_size)
+    client_socket = publish_data(publish_server_address, publish_server_port, feed_test_data_function, publish_timeout, write_buffer_size, session_id, camera_id)

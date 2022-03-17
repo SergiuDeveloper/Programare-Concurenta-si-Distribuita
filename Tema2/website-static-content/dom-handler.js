@@ -131,6 +131,7 @@ function setAlertCheckboxValue(sessionId) {
             sessionIdSpan.innerHTML = sessionId;
             sessionContent.style.display = "block";
 
+            getFramesData(sessionId);
             window.setInterval(function() {
                 getFramesData(sessionId)
             }, 5000);
@@ -154,17 +155,46 @@ function getFramesData(sessionId) {
             const response = JSON.parse(getCamerasRequest.responseText);
             const cameraIds = response["cameraIds"];
 
+            const cameraFrames = [...document.getElementsByClassName("cameraFrame")];
+            const existingCameraIds = [];
+            cameraFrames.forEach(cameraFrame => {
+                existingCameraIds.push(cameraFrame);
+            });
+
+            const cameraContent = document.getElementById("cameraContent");
+
+            cameraIds.forEach(cameraId => {
+                if (existingCameraIds.includes(cameraId)) {
+                    return;
+                }
+                cameraContent.innerHTML += "<div style=\"display: none\" id=\"cameraDiv_" + cameraId + "\"><strong>Camera " + cameraId + "</strong><br><img class=\"cameraFrame\" data-id=\"" + cameraId + "\" width=\"500\" id=\"camera_" + cameraId + "\"></div>";
+            });
+
             cameraIds.forEach(cameraId => {
                 const socket = new WebSocket("ws://ec2-3-251-85-101.eu-west-1.compute.amazonaws.com:8001");
 
-                socket.addEventListener("open", function(event) {
-                    socket.send(sessionId.concat(cameraId));
-                });
-                socket.addEventListener("message", function(event) {
-                    const frameData = event.data;
+                socket.onopen = function(e) {
+                    socket.send(JSON.stringify({
+                        "sessionId": sessionId,
+                        "cameraId": cameraId
+                    }));
+                };
+
+                socket.onmessage = function(e) {
+                    const frameData = e.data;
+                    if (frameData.length == 0) {
+                        return;
+                    }
+
+                    const cameraElement = document.getElementById("camera_" + cameraId);
+                    const cameraDivElement = document.getElementById("cameraDiv_" + cameraId);
+                    cameraElement.src = "data:image/png;base64," + frameData;
+                    if (cameraDivElement.style.display == "none") {
+                        cameraDivElement.style.display = "block";
+                    }
 
                     socket.close();
-                });
+                };
             });
         } else {
             alert("Failed to get cameras");

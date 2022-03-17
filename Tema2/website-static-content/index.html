@@ -10,24 +10,28 @@
 <body>
     <div id="sessionSelector">
         <div>
-            <label for="sessionId">Enter the desired session ID:</label>
+            <label for="sessionId">Session ID:</label>
             <input type="text" id="sessionIdInput" name="sessionId"><br>
             <button id="joinSession">Join session</button>
         </div>
         <div>
-            <label for="alertEmailInput">Email</label>
+            <label for="alertEmailInput">Email:</label>
             <input type="text" id="alertEmailInput" name="alertEmailInput"><br>
             <button id="createSession">Create session</button>
         </div>
     </div>
 
     <div id="sessionContent">
-        <strong>
-            Session <span id="sessionId"></span><br>
-            <label id="alertEmailLabel">Alert email: <span id="alertEmail"></span></label><br>
-            <label for="alertCheckbox">Alert</label>
-            <input type="checkbox" id="alertCheckbox" name="alertCheckbox">
-        </strong>
+        <div>
+            <strong>
+                Session <span id="sessionId"></span><br>
+                <label id="alertEmailLabel">Alert email: <span id="alertEmail"></span></label><br>
+                <label for="alertCheckbox">Alert</label>
+                <input type="checkbox" id="alertCheckbox" name="alertCheckbox">
+            </strong>
+        </div>
+
+        <div id="cameraContent"></div>
     </div>
 </body>
 

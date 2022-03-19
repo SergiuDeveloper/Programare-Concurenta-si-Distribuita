@@ -60,7 +60,6 @@ def handle_client(connection, read_buffer_size, s3_client, session_id_length, ca
 if __name__ == '__main__':
     publish_server_address, publish_server_port, read_buffer_size, aws_region, session_id_length, camera_id_length, frames_s3_bucket_name = read_config(CONFIG_FILE)
 
-    rekognition_client = boto3.client('rekognition', region_name=aws_region)
     s3_client = boto3.client('s3')
     
     get_publish_data(publish_server_address, publish_server_port, read_buffer_size, s3_client, session_id_length, camera_id_length, frames_s3_bucket_name)

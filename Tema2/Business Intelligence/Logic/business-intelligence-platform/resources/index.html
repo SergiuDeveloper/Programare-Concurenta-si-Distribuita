@@ -3,26 +3,35 @@
 <head>
     <title>Smart Monitoring Business Intelligence</title>
 
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.plot.ly/plotly-2.9.0.min.js"></script>
 </head>
 
 <body>
-    <div>
-        <div>
-            <h3>Sessions Data and Predictions</h3>
-            <div id="sessionsPlot"></div>
+    <div class="content">
+        <div class="header">
+            <h1>Prediction data analysis</h1>
         </div>
+        <table>
+            <tr>
+                <th>
+                    <h3>Sessions Data and Predictions</h3>
+                    <div id="sessionsPlot"></div>
+                </th>
 
-        <div>
-            <h3>Cameras Data and Predictions</h3>
-            <div id="camerasPlot"></div>
-        </div>
+                <th>
+                    <h3>Cameras Data and Predictions</h3>
+                    <div id="camerasPlot"></div>
+                </th>
 
-        <div>
-            <h3>Timestamps Data and Predictions</h3>
-            <div id="timestampsPlot"></div>
-        </div>
+                <th>
+                    <h3>Timestamps Data and Predictions</h3>
+                    <div id="timestampsPlot"></div>
+                </th>
+            </tr>
+        </table>
     </div>
+    <div class="header"></div>
 </body>
 
 <footer>

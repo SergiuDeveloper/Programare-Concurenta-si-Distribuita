@@ -36,6 +36,11 @@ def serve_plots_js():
 
         return file_content
 
+@app.get('/style.css')
+def serve_style_css():
+    with open('../resources/style.css') as style_css_file:
+        return style_css_file.read()
+
 
 def read_config(config_file_path):
     with open(config_file_path) as config_file:

@@ -1,0 +1,29 @@
+h3 {
+    color: white;
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    margin-top: 1%;
+}
+
+.header {
+    background-color: #bc2c3c;
+    padding: 3%
+}
+
+h1 {
+    text-align: center;
+    color: white;
+}
+
+.content {
+    background-image: url('https://wallpapercave.com/wp/wp2757874.gif');
+    background-size: cover;
+    height: 88.9%;
+}
+
+.plotly {
+    position: fixed;
+}

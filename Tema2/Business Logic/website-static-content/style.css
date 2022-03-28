@@ -1,3 +1,76 @@
 #sessionContent {
     display: none;
+    text-shadow: 3px 3px #742a33;
+    color: white;
+}
+
+.labels {
+    margin-top: 3%;
+    width: 49%;
+    text-align: center;
+}
+
+.monitoring {
+    margin-top: 2%;
+}
+
+#lblEmail {
+    padding-top: 23%;
+    padding-left: 76%;
+}
+
+input:focus {
+    /* ...existing styles */
+    box-shadow: 0 0 0 3px hsla(var(--input-focus-h), var(--input-focus-s), calc(var(--input-focus-l) + 40%), 0.8);
+    border-color: #742a33;
+    transition: 180ms box-shadow ease-in-out;
+}
+
+label {
+    color: white;
+}
+
+#sessionIdInput {
+    width: 30%;
+    text-align: center;
+    align-content: center;
+    margin-left: 9%;
+    border-color: #742a33;
+    border-radius: 10px;
+    background-color: #22222c;
+}
+
+#alertEmailInput {
+    width: 30%;
+    text-align: center;
+    align-content: center;
+    margin-left: 61.5%;
+    border-color: #742a33;
+    border-radius: 10px;
+    background-color: #22222c;
+}
+
+.btn-outline-success {
+    width: 15%;
+    text-align: center;
+    position: relative;
+    margin-top: 1%;
+    left: 17%;
+}
+
+.btn-outline-primary {
+    width: 15%;
+    text-align: center;
+    position: relative;
+    top: 30%;
+    margin-top: 1%;
+    left: 70%;
+}
+
+body {
+    background-image: url('https://wallpapercave.com/wp/wp2757874.gif');
+    background-size: cover;
+    height: 100vh;
+    padding: 0;
+    margin: 0;
 }
